@@ -3,7 +3,6 @@
     <el-container>
       <!-- 侧边栏 -->
       <el-aside width="200px">
-        <!-- <el-header></el-header> -->
         <h1 class="logo" @click="$router.push({ name: 'welcome' })"></h1>
         <el-menu
           class="el-menu-vertical-demo"
@@ -35,7 +34,7 @@
               <i class="el-icon-reading"></i>
               文章列表
             </el-menu-item>
-            <el-menu-item index="2-2">
+            <el-menu-item index="addpost">
               <i class="el-icon-reading"></i>
               文章发布
             </el-menu-item>

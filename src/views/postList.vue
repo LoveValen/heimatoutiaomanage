@@ -6,21 +6,28 @@
       <el-breadcrumb-item>文章列表</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card class="box-card">
-      <el-table :data="tableData" style="width: 100%">
-        <el-table-column prop="date" label="日期" width="180">
+      <el-table :data="postList" :border="true" style="width: 100%">
+        <el-table-column type="index" :index="postList.id"></el-table-column>
+        <el-table-column prop="title" label="标题" width="360">
         </el-table-column>
-        <el-table-column prop="name" label="姓名" width="180">
+        <el-table-column prop="type" label="类型" width="100">
         </el-table-column>
-        <el-table-column prop="address" label="地址"> </el-table-column>
+        <el-table-column prop="user.nickname" label="作者"> </el-table-column>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button @click="handleClick(scope.row)"> 查看 </el-button>
+            <el-button type="danger"> 编辑 </el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page="currentPage4"
-        :page-sizes="[100, 200, 300, 400]"
-        :page-size="100"
+        :current-page="currentPage"
+        :page-sizes="[2, 4, 6, 8]"
+        :page-size="pageSize"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="400"
+        :total="total"
       >
       </el-pagination>
     </el-card>
@@ -28,35 +35,53 @@
 </template>
 
 <script>
+import { getPostList } from "@/apis/post.js";
 export default {
   data() {
     return {
-      tableData: [
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1517 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1519 弄",
-        },
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1516 弄",
-        },
-      ],
+      postList: [],
+      total: 0,
+      pageSize: 2,
+      currentPage: 1,
     };
+  },
+  methods: {
+    async init() {
+      let res = await getPostList({
+        pageSize: this.pageSize,
+        pageIndex: this.currentPage,
+      });
+      // console.log(res);
+      this.postList = res.data.data;
+      this.total = res.data.total;
+    },
+    handleClick(row) {
+      console.log(row);
+    },
+    handleSizeChange(val) {
+      // console.log(`每页 ${val} 条`);
+      this.pageSize = val;
+      this.init();
+    },
+    handleCurrentChange(val) {
+      // console.log(`当前页: ${val}`);
+      this.currentPage = val;
+      this.init();
+    },
+  },
+  async mounted() {
+    this.init();
   },
 };
 </script>
 
 <style lang="less" scoped>
+.container {
+  .el-card {
+    margin-top: 20px;
+  }
+  .el-pagination {
+    text-align: center;
+  }
+}
 </style>

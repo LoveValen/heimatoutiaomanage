@@ -29,6 +29,11 @@ const router = new VueRouter({
           name: 'postlist',
           path: 'postlist',
           component: () => import('@/views/postList.vue'),
+        },
+        {
+          name: 'addpost',
+          path: 'addpost',
+          component: () => import('@/views/addPost.vue'),
         }
       ],
     }
