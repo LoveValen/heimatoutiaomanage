@@ -16,7 +16,7 @@
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button @click="handleClick(scope.row)"> 查看 </el-button>
-            <el-button type="danger"> 编辑 </el-button>
+            <el-button @click="$router.push({path:'editPost?id='+scope.row.id})" type="danger"> 编辑 </el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -61,18 +61,15 @@
         <!-- 封面 -->
         <el-form-item label="封面" prop="cover">
           <el-upload
+          :file-list="postList.cover"
             :action="axios.defaults.baseURL + '/upload'"
             :headers="getToken()"
             list-type="picture-card"
-            :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :on-success="handlePictureUpload"
           >
             <i class="el-icon-plus"></i>
           </el-upload>
-          <el-dialog :visible.sync="dialogVisible">
-            <img width="100%" :src="dialogImageUrl" alt="" />
-          </el-dialog>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm"> 提交 </el-button>
@@ -86,15 +83,13 @@
 import VueEditor from "vue-word-editor";
 import "quill/dist/quill.snow.css";
 import axios from "@/utils/request.js";
-import { addPostList } from "@/apis/post.js";
-import { getCategories } from "@/apis/category.js";
+import { editPost,getPost } from "@/apis/post.js";
+import {getCategories} from '@/apis/category.js';
 export default {
   components: { VueEditor },
   data() {
     return {
       axios,
-      dialogImageUrl: "", // 本地预览图片
-      dialogVisible: false,
       checkAll: false, // 全选框
       checkedCategories: [], // 选择的栏目
       categories: [], // 所有栏目
@@ -140,10 +135,24 @@ export default {
     };
   },
   async mounted() {
-    let res = await getCategories();
-    // console.log(res);
-    this.categories = res.data.data.slice(2);
-    // console.log(this.categories);
+    let cates = await getCategories();
+    this.categories = cates.data.data.slice(2);
+    let res = await getPost(this.$route.query.id);
+    // 已选的栏目
+    this.checkedCategories = res.data.data.categories.map((value)=>{
+      return value.id;
+    });
+    this.postList.cover = res.data.data.cover.map((value)=>{
+      if(value.url.indexOf('http') == -1){
+        value.url = axios.defaults.baseURL + value.url;
+      }
+      value.uid = value.id;
+      return{
+        value
+      }
+    });
+    this.postList = res.data.data;
+    this.$refs.vueEditor.editor.root.innerHTML = res.data.data.content; // 填写当前富文本框的内容
   },
   methods: {
     getToken() {
@@ -161,11 +170,11 @@ export default {
             this.postList.categories[i] = { id: this.checkedCategories[i] };
           }
           // console.log(this.postList);
-          let res = await addPostList(this.postList);
-          if (res.data.message == "文章发布成功") {
+          let res = await editPost(this.$route.query.id,this.postList);
+          if (res.data.message == "文章编辑成功") {
             this.$message({
               showClose: true,
-              message: "文章发布成功",
+              message: "文章编辑成功",
               type: "success",
             });
           }
@@ -195,19 +204,23 @@ export default {
         checkedCount > 0 && checkedCount < this.categories.length;
     },
 
-    handleRemove(file) {
-      // console.log(file, fileList);
-      this.postList.cover = this.postList.cover.filter((val) => {
-        if (file.response.data.id != val.id) return val;
-      });
+    handleRemove(file,fileList) {
+      // 第二个参数可以接收到删除后的文件列表
+      // 直接赋值给用做文件列表的this.postList.cover即可
+      this.postList.cover = fileList;
+      this.$message({
+              showClose: true,
+              message: "删除成功!",
+            });
     },
-    handlePictureCardPreview(file) {
-      this.dialogImageUrl = file.url;
-      this.dialogVisible = true;
-    },
-    handlePictureUpload(response) {
+    handlePictureUpload(response,file) {
+      // 这里应该将当前的封面放入 postList 当中
+      // 接口文档要求的数据是 [{id:**}]
+      // 由于这个用来postList.cover的数据不仅仅只用来发送 api 请求，
+      // 也会用来渲染上传组件，单单一个 id 就不够，还要有这个 file 用来显示
+      file.id = response.data.id;
       // console.log(response, file, fileList);
-      this.postList.cover.push({ id: response.data.id });
+      this.postList.cover.push(file);
     },
   },
 };
